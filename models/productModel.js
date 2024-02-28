@@ -42,11 +42,11 @@ const productSchema = new mongoose.Schema({
   },
   taxable: {
     type: Boolean,
-    required: true,
+    required: false,
   },
   isActive: {
     type: Boolean,
-    required: true,
+    required: false,
   },
   images: {
     type: Array,

@@ -12,11 +12,14 @@ const addProduct = async (req, res) => {
   const imagesPaths = req.files.map((item) => {
     return item.path.replaceAll("\\", "/").replace("files/", "");
   });
+  console.log("req.body", req.body);
+  console.log("files", req.files);
+  console.log("discount", req.body.discount);
   try {
     const skuExists = await Product.find({ sku: sku });
     const nameExists = await Product.find({ name });
     if (skuExists.length > 0 || nameExists.length > 0) {
-      return res.json({ status: false, Error: "Product already exists!" });
+      return res.json({ status: false, error: "Product already exists!" });
     }
 
     const findCategory = await Category.find({ _id: category });
@@ -34,7 +37,7 @@ const addProduct = async (req, res) => {
     });
     return res.json({ status: true, data: added });
   } catch (err) {
-    return res.json({ status: false, Error: err });
+    return res.json({ status: false, error: err });
   }
 };
 
@@ -43,7 +46,7 @@ const getAllProducts = async (req, res) => {
     const resp = await Product.find();
     return res.json({ status: true, data: resp });
   } catch (err) {
-    return res.json({ status: false, Error: err });
+    return res.json({ status: false, error: err });
   }
 };
 
@@ -53,7 +56,7 @@ const getSingleProduct = async (req, res) => {
     const resp = await Product.find({ _id: id });
     return res.json({ status: true, data: resp });
   } catch (err) {
-    return res.json({ status: false, Error: err });
+    return res.json({ status: false, error: err });
   }
 };
 
@@ -83,7 +86,7 @@ const getProductsByCategory = async (req, res) => {
     });
     return res.json({ status: true, data: products });
   } catch (err) {
-    return res.json({ status: false, Error: err });
+    return res.json({ status: false, error: err });
   }
 };
 
