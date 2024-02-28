@@ -67,14 +67,46 @@ const updateProduct = async (req, res) => {
       return item.path.replaceAll("\\", "/").replace("files/", "");
     }),
   };
+
   const imagePath = images.images.length > 0 ? images : { images: undefined };
-  const bodyData = req.body;
-  Object.assign(bodyData, imagePath);
+  const bodyData = {};
+  if (req.body.name !== "") {
+    Object.assign(bodyData, { name: req.body.name });
+  }
+  if (req.body.description !== "") {
+    Object.assign(bodyData, { description: req.body.description });
+  }
+  if (req.body["discount.discountValue"] !== "") {
+    Object.assign(bodyData, {
+      discountValue: req.body["discount.discountValue"],
+    });
+  }
+  if (req.body.price !== "") {
+    Object.assign(bodyData, { price: req.body.price });
+  }
+  if (req.body.quantity !== "") {
+    Object.assign(bodyData, { quantity: req.body.quantity });
+  }
+  if (req.body.sku !== "") {
+    Object.assign(bodyData, { sku: req.body.sku });
+  }
+  if (req.body.category !== "") {
+    try {
+      const cat = await Category.findOne({ _id: req.body.category });
+      Object.assign(bodyData, { category: { id: cat._id, name: cat.name } });
+    } catch (err) {
+      console.log("categoryError", err);
+    }
+  }
+
+  if (req.files.length > 0) {
+    Object.assign(bodyData, imagePath);
+  }
   try {
     const edited = await Product.updateOne({ _id: id }, bodyData);
     return res.json({ status: true, edited });
   } catch (err) {
-    return res.json({ status: false, err });
+    return res.json({ status: false, error: "Internal server error" });
   }
 };
 
