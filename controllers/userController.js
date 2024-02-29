@@ -137,9 +137,15 @@ const editUser = async (req, res) => {
 };
 
 const getAllUsers = async (req, res) => {
+  const type = req.query.type;
   try {
-    const users = await User.find();
-    return res.json({ status: true, users: users });
+    if (type) {
+      const users = await User.find({ role: type });
+      return res.json({ status: true, users: users });
+    } else {
+      const users = await User.find();
+      return res.json({ status: true, users: users });
+    }
   } catch (err) {
     return res.json({ status: false, error: err });
   }

@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const mongoosePaginate = require("mongoose-paginate-v2");
 
 const checkoutSchema = new mongoose.Schema({
   status: {
@@ -129,6 +130,6 @@ const checkoutSchema = new mongoose.Schema({
   },
 });
 
+checkoutSchema.plugin(mongoosePaginate);
 const Checkout = mongoose.model("Checkout", checkoutSchema);
-
 module.exports = Checkout;

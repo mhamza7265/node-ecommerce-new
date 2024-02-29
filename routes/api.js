@@ -94,6 +94,8 @@ const {
   paymentIntent,
   getAllOrders,
   processOrder,
+  getAllOrdersByPage,
+  getCustomerOrdersByPage,
 } = require("../controllers/checkoutController");
 
 const {
@@ -175,6 +177,7 @@ app.post(
   createCheckout
 );
 app.get("/orders", orderDetails);
+app.get("/orders/listing", getAllOrdersByPage);
 app.get("/order/:orderId", singleOrderDetails);
 app.get("/order/status/:orderId", orderStatus);
 app.post("/checkout/session", createPayment);
@@ -221,6 +224,7 @@ app.post(
 app.delete("/product/:id", deleteSingleProduct);
 app.put("/product/:id", upload.any(), updateProduct);
 app.get("/customerorders/:id", getAllOrders);
+app.get("/customerorders/listing/:id", getCustomerOrdersByPage);
 app.put("/order/process", processOrder);
 
 module.exports = app;

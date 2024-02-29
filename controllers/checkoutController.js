@@ -161,6 +161,40 @@ const getAllOrders = async (req, res) => {
   }
 };
 
+const getAllOrdersByPage = async (req, res) => {
+  const userId = req.headers.id;
+  const role = req.headers.role;
+  const currentPage = req.query.page;
+  let page = 1;
+  const limit = 5;
+  if (currentPage) page = currentPage;
+  try {
+    if (role == "admin") {
+      const orders = await Checkout.paginate({}, { page, limit });
+      return res.status(200).json({ status: true, orders });
+    } else {
+      const orders = await Checkout.paginate({ userId }, { page, limit });
+      return res.status(200).json({ status: true, orders });
+    }
+  } catch (err) {
+    return res.status(500).json({ status: false, error: err });
+  }
+};
+
+const getCustomerOrdersByPage = async (req, res) => {
+  const userId = req.params.id;
+  const currentPage = req.query.page;
+  let page = 1;
+  const limit = 5;
+  if (currentPage) page = currentPage;
+  try {
+    const orders = await Checkout.paginate({ userId }, { page, limit });
+    return res.status(200).json({ status: true, orders });
+  } catch (err) {
+    return res.status(500).json({ status: false, error: err });
+  }
+};
+
 const processOrder = async (req, res) => {
   const orderId = req.body.orderId;
   const orderStatus = req.body.orderStatus;
@@ -191,5 +225,7 @@ module.exports = {
   createPayment,
   paymentIntent,
   getAllOrders,
+  getAllOrdersByPage,
   processOrder,
+  getCustomerOrdersByPage,
 };
