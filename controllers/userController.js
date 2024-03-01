@@ -147,7 +147,7 @@ const getAllUsers = async (req, res) => {
       return res.json({ status: true, users: users });
     }
   } catch (err) {
-    return res.json({ status: false, error: err });
+    return res.json({ status: false, error: "Internal server error" });
   }
 };
 
@@ -167,7 +167,7 @@ const getCurrentUser = async (req, res) => {
       },
     });
   } catch (err) {
-    return res.json({ status: false, error: err });
+    return res.json({ status: false, error: "Internal server error" });
   }
 };
 
@@ -213,7 +213,7 @@ const updatePassword = async (req, res) => {
 
 const userRole = async (req, res) => {
   const verify = jwt.verify(
-    req.headers.authorization.replace("Bearer ", ""),
+    req.headers?.authorization?.replace("Bearer ", ""),
     process.env.JWT_SECRET
   );
   if (verify) {
