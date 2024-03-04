@@ -40,6 +40,10 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     required: true,
   },
+  blocked: {
+    type: Boolean,
+    required: true,
+  },
 });
 
 const User = mongoose.model("User", userSchema);

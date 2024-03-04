@@ -29,6 +29,7 @@ const registerUser = async (req, res) => {
           passwordCreated !== null && passwordCreated !== undefined
             ? passwordCreated
             : true,
+        blocked: false,
       });
       return res.json({
         status: true,
@@ -62,6 +63,7 @@ const loginUser = async (req, res) => {
         lastName: getUser.lastName,
         role: getUser.role,
         passwordCreated: getUser.passwordCreated,
+        blocked: getUser.blocked,
       },
       process.env.JWT_SECRET
     );
@@ -225,6 +227,34 @@ const userRole = async (req, res) => {
   }
 };
 
+const blockUnblockUser = async (req, res) => {
+  try {
+    const editBlocked = await User.updateOne(
+      { _id: req.body.userId },
+      {
+        blocked: req.body.blocked,
+      }
+    );
+    if (editBlocked.acknowledged) {
+      if (req.body.type) {
+        const users = await User.find({ role: req.body.type });
+        return res.status(200).json({ status: true, users });
+      } else {
+        const users = await User.find({});
+        return res.status(200).json({ status: true, users });
+      }
+    } else {
+      return res
+        .status(500)
+        .json({ status: false, error: "Error in execution" });
+    }
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ status: false, error: "internal server error" });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -233,4 +263,5 @@ module.exports = {
   getCurrentUser,
   updatePassword,
   userRole,
+  blockUnblockUser,
 };

@@ -67,6 +67,7 @@ const {
   getCurrentUser,
   updatePassword,
   userRole,
+  blockUnblockUser,
 } = require("../controllers/userController");
 
 const {
@@ -226,5 +227,6 @@ app.put("/product/:id", upload.any(), updateProduct);
 app.get("/customerorders/:id", getAllOrders);
 app.get("/customerorders/listing/:id", getCustomerOrdersByPage);
 app.put("/order/process", processOrder);
+app.put("/user/lock", blockUnblockUser);
 
 module.exports = app;

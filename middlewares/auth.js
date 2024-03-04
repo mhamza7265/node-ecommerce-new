@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const User = require("../models/userModel");
 require("dotenv").config();
 
 const authenticateUser = async (req, res, next) => {
@@ -8,16 +9,28 @@ const authenticateUser = async (req, res, next) => {
       process.env.JWT_SECRET
     );
     if (verify) {
-      req.headers = verify;
-      if (!verify.passwordCreated) {
-        return res.json({
-          status: false,
-          type: "updatePassword",
-          error: "Update password first",
-        });
-        // return res.redirect("http://localhost:5173/updatePw");
-      } else {
-        next();
+      try {
+        const user = await User.findOne({ _id: verify.id });
+        if (user.blocked) {
+          return res.status(500).json({
+            status: false,
+            error: "Your account is locked, please contact admin.",
+          });
+        } else if (!verify.passwordCreated) {
+          return res.json({
+            status: false,
+            type: "updatePassword",
+            error: "Update password first",
+          });
+          // return res.redirect("http://localhost:5173/updatePw");
+        } else {
+          req.headers = verify;
+          next();
+        }
+      } catch (err) {
+        return res
+          .status(500)
+          .json({ status: false, error: "Internal server error" });
       }
     }
   } catch (err) {
