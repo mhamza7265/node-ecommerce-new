@@ -10,6 +10,10 @@ const checkoutSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  date: {
+    type: Number,
+    required: false,
+  },
   transactionId: {
     type: String,
     required: true,
@@ -64,6 +68,10 @@ const checkoutSchema = new mongoose.Schema({
         },
       },
       price: {
+        type: Number,
+        required: true,
+      },
+      cost: {
         type: Number,
         required: true,
       },

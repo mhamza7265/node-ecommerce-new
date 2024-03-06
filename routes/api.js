@@ -97,6 +97,7 @@ const {
   processOrder,
   getAllOrdersByPage,
   getCustomerOrdersByPage,
+  dashboardData,
 } = require("../controllers/checkoutController");
 
 const {
@@ -228,5 +229,6 @@ app.get("/customerorders/:id", getAllOrders);
 app.get("/customerorders/listing/:id", getCustomerOrdersByPage);
 app.put("/order/process", processOrder);
 app.put("/user/lock", blockUnblockUser);
+app.post("/dashboard", dashboardData);
 
 module.exports = app;

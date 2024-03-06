@@ -1,6 +1,8 @@
 const Checkout = require("../models/checkoutModel");
 const Cart = require("../models/cartModel");
 const Address = require("../models/addressModel");
+const Product = require("../models/productModel");
+const User = require("../models/userModel");
 const { checkoutConfig } = require("../config/utility");
 const stripe = require("stripe")(
   "sk_test_51OgnngCZAiYypOnUqPVjqJabWfyBwjL5aA75jBrk0eJ13S9LQ6yL96Qbm4WEEEqb0XAEcHvBM6jhVO0s0lgoB4IF007yzT5pd4"
@@ -217,6 +219,112 @@ const processOrder = async (req, res) => {
   }
 };
 
+const dashboardData = async (req, res) => {
+  const specificOrderDate = new Date();
+  const year = specificOrderDate.getFullYear();
+  const month = specificOrderDate.getMonth();
+  const day = specificOrderDate.getDate();
+  const startOfDay = new Date(year, month, day, 0, 0, 0).toISOString();
+  const endOfDay = new Date(year, month, day, 23, 59, 59).toISOString();
+  const startYear = new Date(year, 0, 1, 0, 0, 0).toISOString();
+  const endYear = new Date(year, 11, 31, 23, 59, 59).toISOString();
+  try {
+    const salesToday = await Checkout.aggregate([
+      {
+        $match: {
+          orderDate: {
+            $gte: startOfDay,
+            $lte: endOfDay,
+          },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalGrandTotal: { $sum: "$grandTotal" },
+          totalCount: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const salesTotal = await Checkout.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalGrandTotal: { $sum: "$grandTotal" },
+          totalCount: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const salesTodayPrcentage =
+      (salesToday[0].totalGrandTotal / salesTotal[0].totalGrandTotal) * 100;
+
+    const ordersTodayPercentage =
+      (salesToday[0].totalCount / salesTotal[0].totalCount) * 100;
+
+    const products = (await Product.find()).length;
+    const users = (await User.find({ role: "basic" })).length;
+
+    const salesByMonths = await Checkout.aggregate([
+      {
+        $match: {
+          orderDate: {
+            $gte: startYear,
+            $lte: endYear,
+          },
+        },
+      },
+      {
+        $addFields: {
+          orderDateConverted: { $dateFromString: { dateString: "$orderDate" } }, // Convert string to Date object
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $month: "$orderDateConverted",
+          },
+          year: { $first: { $year: "$orderDateConverted" } },
+          totalGrandTotal: { $sum: "$grandTotal" },
+        },
+      },
+      { $sort: { _id: 1 } },
+      {
+        $project: {
+          _id: 0, // Exclude the _id field
+          month: "$_id", // Rename _id to month
+          year: 1,
+          totalGrandTotal: 1,
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      status: true,
+      data: {
+        sales: {
+          salesToday: salesToday[0].totalGrandTotal,
+          salesTotal: salesTotal[0].totalGrandTotal,
+          salesPercentage: salesTodayPrcentage.toFixed(),
+        },
+        orders: {
+          ordersToday: salesToday[0].totalCount,
+          ordersTotal: salesTotal[0].totalCount,
+          ordersPercentage: ordersTodayPercentage.toFixed(),
+        },
+        totalProducts: products,
+        totalUsers: users,
+        salesByMonths,
+      },
+    });
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ status: false, error: "Internal server error" });
+  }
+};
+
 module.exports = {
   createCheckout,
   orderDetails,
@@ -228,4 +336,5 @@ module.exports = {
   getAllOrdersByPage,
   processOrder,
   getCustomerOrdersByPage,
+  dashboardData,
 };

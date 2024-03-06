@@ -11,6 +11,7 @@ module.exports = {
     body("discount.applicable")
       .exists()
       .withMessage("Applicable field is required!"),
+    body("cost").exists().withMessage("Cost is required!"),
   ],
   handleProductValidationErrors: (req, res, next) => {
     const errors = validationResult(req);

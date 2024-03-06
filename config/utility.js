@@ -5,6 +5,7 @@ const configureCart = (prodId, product, requestedQuantity) => {
     name: product.name,
     description: product.description,
     price: product.price,
+    cost: product.cost,
     images: [product.images],
     category: { id: product.category.id, name: product.category.name },
     discount: {
@@ -51,10 +52,9 @@ const calculateGrands = (cartItems) => {
 };
 
 const checkoutConfig = (data) => {
-  const d = Date();
   const checkout = {
     status: "processing",
-    orderDate: d.toLocaleString(),
+    orderDate: new Date().toISOString(),
     transactionId: Math.floor(Math.random() * 100000000000),
     paymentId: Math.floor(Math.random() * 100000000000),
     paymentType: data.paymentType,

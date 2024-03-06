@@ -12,9 +12,6 @@ const addProduct = async (req, res) => {
   const imagesPaths = req.files.map((item) => {
     return item.path.replaceAll("\\", "/").replace("files/", "");
   });
-  console.log("req.body", req.body);
-  console.log("files", req.files);
-  console.log("discount", req.body.discount);
   try {
     const skuExists = await Product.find({ sku: sku });
     const nameExists = await Product.find({ name });
@@ -61,6 +58,7 @@ const getSingleProduct = async (req, res) => {
 };
 
 const updateProduct = async (req, res) => {
+  console.log("body", req.body);
   const id = req.params.id;
   const images = {
     images: req.files?.map((item) => {
@@ -70,30 +68,32 @@ const updateProduct = async (req, res) => {
 
   const imagePath = images.images.length > 0 ? images : { images: undefined };
   const bodyData = {};
-  if (req.body.name !== "") {
-    Object.assign(bodyData, { name: req.body.name });
+  if (req.body.name) {
+    bodyData["name"] = req.body.name;
   }
-  if (req.body.description !== "") {
-    Object.assign(bodyData, { description: req.body.description });
+  if (req.body.description) {
+    bodyData["description"] = req.body.description;
   }
-  if (req.body["discount.discountValue"] !== "") {
-    Object.assign(bodyData, {
-      discountValue: req.body["discount.discountValue"],
-    });
+  if (req.body["discount.discountValue"]) {
+    console.log("avail", req.body["discount.discountValue"]);
+    bodyData["discount.discountValue"] = req.body["discount.discountValue"];
   }
-  if (req.body.price !== "") {
-    Object.assign(bodyData, { price: req.body.price });
+  if (req.body.price) {
+    bodyData["price"] = req.body.price;
   }
-  if (req.body.quantity !== "") {
-    Object.assign(bodyData, { quantity: req.body.quantity });
+  if (req.body.cost) {
+    bodyData["cost"] = req.body.cost;
   }
-  if (req.body.sku !== "") {
-    Object.assign(bodyData, { sku: req.body.sku });
+  if (req.body.quantity) {
+    bodyData["quantity"] = req.body.quantity;
   }
-  if (req.body.category !== "") {
+  if (req.body.sku) {
+    bodyData["sku"] = req.body.sku;
+  }
+  if (req.body.category) {
     try {
       const cat = await Category.findOne({ _id: req.body.category });
-      Object.assign(bodyData, { category: { id: cat._id, name: cat.name } });
+      bodyData["category"] = { id: cat._id, name: cat.name };
     } catch (err) {
       console.log("categoryError", err);
     }
@@ -102,6 +102,8 @@ const updateProduct = async (req, res) => {
   if (req.files.length > 0) {
     Object.assign(bodyData, imagePath);
   }
+
+  console.log("bodyData", bodyData);
   try {
     const edited = await Product.updateOne({ _id: id }, bodyData);
     return res.json({ status: true, edited });
