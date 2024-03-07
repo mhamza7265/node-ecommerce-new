@@ -22,7 +22,7 @@ const registerUser = async (req, res) => {
     if (role == "admin" && verify.role !== "superAdmin") {
       return res.status(401).json({
         status: false,
-        error: "Unauthorised, Super-Admin privelage required",
+        error: "Unauthorised, Super-Admin privilege required",
       });
     }
   } else {
@@ -69,8 +69,15 @@ const registerUser = async (req, res) => {
 
 const loginUser = async (req, res) => {
   const { email, password, userRole } = req.body;
+
   try {
     const getUser = await User.findOne({ email });
+    if (getUser.blocked) {
+      return res.status(500).json({
+        status: false,
+        error: "Your account is locked, please contact admin/super-admin.",
+      });
+    }
     const token = jwt.sign(
       {
         id: getUser._id,
@@ -105,17 +112,17 @@ const loginUser = async (req, res) => {
         } else {
           return res.json({
             status: false,
-            login: "Not authorised!",
+            error: "Not authorised!",
           });
         }
       } else {
-        return res.json({ status: false, login: "Wrong Password!" });
+        return res.json({ status: false, error: "Wrong Password!" });
       }
     } else {
-      return res.json({ status: false, login: "No user found!" });
+      return res.json({ status: false, error: "No user found!" });
     }
   } catch (err) {
-    return res.json({ status: false, login: "Wrong password or email" });
+    return res.json({ status: false, error: "Wrong password or email" });
   }
 };
 
@@ -271,7 +278,7 @@ const blockUnblockUser = async (req, res) => {
   if (req.body.type == "admin" && req.headers.role !== "superAdmin") {
     return res.status(401).json({
       status: false,
-      error: "Unauthorised, Super-Admin privelage required",
+      error: "Unauthorised, Super-Admin privilege required",
     });
   }
   try {
@@ -327,7 +334,7 @@ const deleteUser = async (req, res) => {
     if (getUser.role !== "basic" && req.headers.role !== "superAdmin") {
       return res.status(401).json({
         status: false,
-        error: "Unauthorised, Super-Admin privelage required",
+        error: "Unauthorised, Super-Admin privilege required",
       });
     } else if (
       getUser.role == "basic" &&
