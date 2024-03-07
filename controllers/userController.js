@@ -13,6 +13,23 @@ const registerUser = async (req, res) => {
     password,
     passwordCreated,
   } = req.body;
+
+  const verify = jwt.verify(
+    req.headers.authorization.replace("Bearer ", ""),
+    process.env.JWT_SECRET
+  );
+  if (verify) {
+    if (role == "admin" && verify.role !== "superAdmin") {
+      return res.status(401).json({
+        status: false,
+        error: "Unauthorised, Super-Admin privelage required",
+      });
+    }
+  } else {
+    return res
+      .status(500)
+      .json({ status: false, error: "Internal server error" });
+  }
   const salt = await bcrypt.genSalt(10);
   const hashedPassword = await bcrypt.hash(password, salt);
   try {
@@ -69,7 +86,11 @@ const loginUser = async (req, res) => {
     );
     if (getUser) {
       if (await bcrypt.compare(password, getUser.password)) {
-        if (userRole && userRole == "admin" && getUser.role == "admin") {
+        if (
+          userRole &&
+          userRole == "admin" &&
+          (getUser.role == "admin" || getUser.role == "superAdmin")
+        ) {
           return res.json({
             status: true,
             login: "Login Success",
@@ -130,11 +151,30 @@ const editUser = async (req, res) => {
     }
 
     const updated = await User.updateOne({ _id: userId }, userObj);
-    return res
-      .status(200)
-      .json({ status: true, updated, message: "User record updated!" });
+    if (updated.acknowledged) {
+      const user = await User.findOne({ _id: userId });
+      return res.status(200).json({
+        status: true,
+        updated,
+        message: "User record updated!",
+        user: {
+          id: user._id,
+          first_name: user.firstName,
+          middle_name: user.middleName,
+          last_name: user.lastName,
+          email: user.email,
+          role: user.role,
+        },
+      });
+    } else {
+      return res
+        .status(500)
+        .json({ status: false, error: "Internal server error" });
+    }
   } catch (err) {
-    return res.status(500).json({ status: false, error: err });
+    return res
+      .status(500)
+      .json({ status: false, error: "Internal server error" });
   }
 };
 
@@ -228,6 +268,12 @@ const userRole = async (req, res) => {
 };
 
 const blockUnblockUser = async (req, res) => {
+  if (req.body.type == "admin" && req.headers.role !== "superAdmin") {
+    return res.status(401).json({
+      status: false,
+      error: "Unauthorised, Super-Admin privelage required",
+    });
+  }
   try {
     const editBlocked = await User.updateOne(
       { _id: req.body.userId },
@@ -255,6 +301,55 @@ const blockUnblockUser = async (req, res) => {
   }
 };
 
+const getUsersByPage = async (req, res) => {
+  const currentPage = req.query.page;
+  const type = req.query.type;
+  let page = 1;
+  const limit = 5;
+  if (currentPage) page = currentPage;
+  try {
+    if (type) {
+      const users = await User.paginate({ role: type }, { page, limit });
+      return res.status(200).json({ status: true, users });
+    } else {
+      const users = await User.paginate({}, { page, limit });
+      return res.status(200).json({ status: true, users });
+    }
+  } catch (err) {
+    return res.status(500).json({ status: false, error: err });
+  }
+};
+
+const deleteUser = async (req, res) => {
+  userId = req.body.userId;
+  try {
+    const getUser = await User.findOne({ _id: userId });
+    if (getUser.role !== "basic" && req.headers.role !== "superAdmin") {
+      return res.status(401).json({
+        status: false,
+        error: "Unauthorised, Super-Admin privelage required",
+      });
+    } else if (
+      getUser.role == "basic" &&
+      (req.headers.role == "superAdmin" || req.headers.role == "admin")
+    ) {
+      const deleted = await User.deleteOne({ _id: userId });
+      return res
+        .status(200)
+        .json({ status: true, deleted, message: "User successfully deleted" });
+    } else if (req.headers.role == "superAdmin") {
+      const deleted = await User.deleteOne({ _id: userId });
+      return res
+        .status(200)
+        .json({ status: true, deleted, message: "User successfully deleted" });
+    }
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ status: false, error: "Internal server error" });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -264,4 +359,6 @@ module.exports = {
   updatePassword,
   userRole,
   blockUnblockUser,
+  getUsersByPage,
+  deleteUser,
 };

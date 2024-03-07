@@ -4,7 +4,7 @@ require("dotenv").config();
 const checkRole = async (req, res, next) => {
   const role = req.headers.role;
 
-  if (role == "admin") {
+  if (role == "admin" || role == "superAdmin") {
     next();
   } else {
     return res.json({ status: false, error: "No administrative privilege!" });

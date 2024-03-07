@@ -43,6 +43,7 @@ const {
   getSingleCategory,
   updateCategory,
   deleteCategory,
+  getCategoriesByPage,
 } = require("../controllers/categoryController");
 
 const {
@@ -68,6 +69,8 @@ const {
   updatePassword,
   userRole,
   blockUnblockUser,
+  getUsersByPage,
+  deleteUser,
 } = require("../controllers/userController");
 
 const {
@@ -143,6 +146,7 @@ app.get("/user/role", userRole);
 
 app.get("/category", getAllCategories);
 app.get("/category/:id", getSingleCategory);
+app.get("/categories/listing", getCategoriesByPage);
 
 app.get("/product", getAllProducts);
 app.get("/product/single/:id", getSingleProduct);
@@ -229,6 +233,8 @@ app.get("/customerorders/:id", getAllOrders);
 app.get("/customerorders/listing/:id", getCustomerOrdersByPage);
 app.put("/order/process", processOrder);
 app.put("/user/lock", blockUnblockUser);
+app.get("/users/listing", getUsersByPage);
 app.post("/dashboard", dashboardData);
+app.delete("/user", deleteUser);
 
 module.exports = app;

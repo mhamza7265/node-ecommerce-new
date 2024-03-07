@@ -247,6 +247,7 @@ const dashboardData = async (req, res) => {
       },
     ]);
 
+
     const salesTotal = await Checkout.aggregate([
       {
         $group: {
@@ -256,6 +257,7 @@ const dashboardData = async (req, res) => {
         },
       },
     ]);
+
 
     const salesTodayPrcentage =
       (salesToday[0].totalGrandTotal / salesTotal[0].totalGrandTotal) * 100;

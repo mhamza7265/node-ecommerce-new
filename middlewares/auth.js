@@ -14,7 +14,7 @@ const authenticateUser = async (req, res, next) => {
         if (user.blocked) {
           return res.status(500).json({
             status: false,
-            error: "Your account is locked, please contact admin.",
+            error: "Your account is locked, please contact admin/super-admin.",
           });
         } else if (!verify.passwordCreated) {
           return res.json({

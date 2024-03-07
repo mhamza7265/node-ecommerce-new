@@ -71,10 +71,24 @@ const deleteCategory = async (req, res) => {
   }
 };
 
+const getCategoriesByPage = async (req, res) => {
+  const currentPage = req.query.page;
+  let page = 1;
+  const limit = 5;
+  if (currentPage) page = currentPage;
+  try {
+    const categories = await Category.paginate({}, { page, limit });
+    return res.status(200).json({ status: true, categories });
+  } catch (err) {
+    return res.status(500).json({ status: false, error: err });
+  }
+};
+
 module.exports = {
   addCategory,
   getAllCategories,
   updateCategory,
   getSingleCategory,
   deleteCategory,
+  getCategoriesByPage,
 };
