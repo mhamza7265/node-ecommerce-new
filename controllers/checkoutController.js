@@ -171,7 +171,7 @@ const getAllOrdersByPage = async (req, res) => {
   const limit = 5;
   if (currentPage) page = currentPage;
   try {
-    if (role == "admin") {
+    if (role == "admin" || role == "superAdmin") {
       const orders = await Checkout.paginate({}, { page, limit });
       return res.status(200).json({ status: true, orders });
     } else {
@@ -247,7 +247,6 @@ const dashboardData = async (req, res) => {
       },
     ]);
 
-
     const salesTotal = await Checkout.aggregate([
       {
         $group: {
@@ -257,7 +256,6 @@ const dashboardData = async (req, res) => {
         },
       },
     ]);
-
 
     const salesTodayPrcentage =
       (salesToday[0].totalGrandTotal / salesTotal[0].totalGrandTotal) * 100;
