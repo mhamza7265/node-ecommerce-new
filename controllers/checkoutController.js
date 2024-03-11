@@ -167,13 +167,29 @@ const getAllOrdersByPage = async (req, res) => {
   const userId = req.headers.id;
   const role = req.headers.role;
   const currentPage = req.query.page;
+  const search = req.query.search;
+  const orderId = req.query.orderId;
   let page = 1;
   const limit = 5;
   if (currentPage) page = currentPage;
   try {
     if (role == "admin" || role == "superAdmin") {
-      const orders = await Checkout.paginate({}, { page, limit });
-      return res.status(200).json({ status: true, orders });
+      if (search) {
+        try {
+          const orders = await Checkout.paginate(
+            { _id: orderId },
+            { page, limit }
+          );
+          return res.status(200).json({ status: true, orders });
+        } catch (err) {
+          return res
+            .status(340)
+            .json({ status: false, error: "No order found" });
+        }
+      } else {
+        const orders = await Checkout.paginate({}, { page, limit });
+        return res.status(200).json({ status: true, orders });
+      }
     } else {
       const orders = await Checkout.paginate({ userId }, { page, limit });
       return res.status(200).json({ status: true, orders });
@@ -258,10 +274,14 @@ const dashboardData = async (req, res) => {
     ]);
 
     const salesTodayPrcentage =
-      (salesToday[0].totalGrandTotal / salesTotal[0].totalGrandTotal) * 100;
+      salesToday.length > 0
+        ? (salesToday[0].totalGrandTotal / salesTotal[0].totalGrandTotal) * 100
+        : 0;
 
     const ordersTodayPercentage =
-      (salesToday[0].totalCount / salesTotal[0].totalCount) * 100;
+      salesToday.length > 0
+        ? (salesToday[0].totalCount / salesTotal[0].totalCount) * 100
+        : 0;
 
     const products = (await Product.find()).length;
     const users = (await User.find({ role: "basic" })).length;
@@ -304,12 +324,12 @@ const dashboardData = async (req, res) => {
       status: true,
       data: {
         sales: {
-          salesToday: salesToday[0].totalGrandTotal,
+          salesToday: salesToday.length > 0 ? salesToday[0].totalGrandTotal : 0,
           salesTotal: salesTotal[0].totalGrandTotal,
           salesPercentage: salesTodayPrcentage.toFixed(),
         },
         orders: {
-          ordersToday: salesToday[0].totalCount,
+          ordersToday: salesToday.length > 0 ? salesToday[0].totalCount : 0,
           ordersTotal: salesTotal[0].totalCount,
           ordersPercentage: ordersTodayPercentage.toFixed(),
         },

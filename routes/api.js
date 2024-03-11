@@ -71,6 +71,7 @@ const {
   blockUnblockUser,
   getUsersByPage,
   deleteUser,
+  userListSelect2,
 } = require("../controllers/userController");
 
 const {
@@ -234,6 +235,7 @@ app.get("/customerorders/listing/:id", getCustomerOrdersByPage);
 app.put("/order/process", processOrder);
 app.put("/user/lock", blockUnblockUser);
 app.get("/users/listing", getUsersByPage);
+app.get("/users/options", userListSelect2);
 app.post("/dashboard", dashboardData);
 app.delete("/user", deleteUser);
 

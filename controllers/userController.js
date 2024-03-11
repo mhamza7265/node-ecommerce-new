@@ -357,6 +357,22 @@ const deleteUser = async (req, res) => {
   }
 };
 
+const userListSelect2 = async (req, res) => {
+  try {
+    const usersList = await User.find();
+    const users = usersList.map((item) => {
+      const obj = {
+        value: item._id,
+        label:
+          item?.firstName + " " + item?.lastName + " " + `(${item?.email})`,
+      };
+      return obj;
+    });
+    return res.status(200).json({ status: true, users });
+    // console.log("users", users);
+  } catch (err) {}
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -368,4 +384,5 @@ module.exports = {
   blockUnblockUser,
   getUsersByPage,
   deleteUser,
+  userListSelect2,
 };
