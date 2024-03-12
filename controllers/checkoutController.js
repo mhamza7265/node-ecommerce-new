@@ -176,10 +176,7 @@ const getAllOrdersByPage = async (req, res) => {
     if (role == "admin" || role == "superAdmin") {
       if (search) {
         try {
-          const orders = await Checkout.paginate(
-            { _id: orderId },
-            { page, limit }
-          );
+          const orders = await Checkout.paginate({ orderId }, { page, limit });
           return res.status(200).json({ status: true, orders });
         } catch (err) {
           return res

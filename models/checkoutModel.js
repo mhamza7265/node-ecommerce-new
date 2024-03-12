@@ -2,6 +2,10 @@ const mongoose = require("mongoose");
 const mongoosePaginate = require("mongoose-paginate-v2");
 
 const checkoutSchema = new mongoose.Schema({
+  orderId: {
+    type: String,
+    required: true,
+  },
   status: {
     type: String,
     required: true,

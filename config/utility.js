@@ -53,6 +53,7 @@ const calculateGrands = (cartItems) => {
 
 const checkoutConfig = (data) => {
   const checkout = {
+    orderId: `ecom_${Math.floor(Math.random() * 90000000)}`,
     status: "processing",
     orderDate: new Date().toISOString(),
     transactionId: Math.floor(Math.random() * 100000000000),
