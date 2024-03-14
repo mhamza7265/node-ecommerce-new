@@ -317,6 +317,78 @@ const dashboardData = async (req, res) => {
       },
     ]);
 
+    const profit = await Checkout.aggregate([
+      {
+        $project: {
+          cartItems: { $slice: ["$cartItems", 1] },
+        },
+      },
+      { $unwind: "$cartItems" },
+      {
+        $project: {
+          cost: {
+            $map: {
+              input: { $objectToArray: "$cartItems" },
+              as: "item",
+              in: "$$item.v.cost",
+            },
+          },
+          quantity: {
+            $map: {
+              input: { $objectToArray: "$cartItems" },
+              as: "item",
+              in: "$$item.v.quantity",
+            },
+          },
+          total: {
+            $map: {
+              input: { $objectToArray: "$cartItems" },
+              as: "item",
+              in: "$$item.v.calculations.subTotal",
+            },
+          },
+        },
+      },
+
+      {
+        $project: {
+          data: {
+            $map: {
+              input: { $range: [0, { $size: "$cost" }] },
+              as: "index",
+              in: {
+                cost: { $arrayElemAt: ["$cost", "$$index"] },
+                quantity: { $arrayElemAt: ["$quantity", "$$index"] },
+                total: { $arrayElemAt: ["$total", "$$index"] },
+              },
+            },
+          },
+        },
+      },
+      { $unwind: "$data" },
+      { $replaceRoot: { newRoot: "$data" } },
+
+      {
+        $project: {
+          totalCost: { $multiply: ["$cost", "$quantity"] },
+          totalVal: "$total",
+        },
+      },
+
+      {
+        $project: {
+          prof: { $subtract: ["$totalVal", "$totalCost"] },
+        },
+      },
+
+      {
+        $group: {
+          _id: null,
+          profit: { $sum: "$prof" },
+        },
+      },
+    ]);
+
     return res.status(200).json({
       status: true,
       data: {
@@ -333,6 +405,7 @@ const dashboardData = async (req, res) => {
         totalProducts: products,
         totalUsers: users,
         salesByMonths,
+        profit: profit[0].profit,
       },
     });
   } catch (err) {

@@ -37,7 +37,7 @@ const calculate = (type, quantity, price, discount) => {
     case "subTotal":
       return price * quantity;
     case "total":
-      return ((price * quantity) / 100) * discount;
+      return ((price * quantity) / 100) * (100 - discount);
   }
 };
 
