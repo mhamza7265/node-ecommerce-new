@@ -45,6 +45,14 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     required: true,
   },
+  verified: {
+    type: Boolean,
+    required: true,
+  },
+  verification: {
+    type: Number,
+    required: false,
+  },
 });
 
 userSchema.plugin(mongoosePaginate);

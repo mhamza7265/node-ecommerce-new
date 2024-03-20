@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const User = require("../models/userModel");
+const sendEmail = require("../config/sendEmail");
 
 const registerUser = async (req, res) => {
   const {
@@ -47,6 +48,8 @@ const registerUser = async (req, res) => {
             ? passwordCreated
             : true,
         blocked: false,
+        verified: false,
+        verification: null,
       });
       return res.json({
         status: true,
@@ -72,12 +75,7 @@ const loginUser = async (req, res) => {
 
   try {
     const getUser = await User.findOne({ email });
-    if (getUser.blocked) {
-      return res.status(500).json({
-        status: false,
-        error: "Your account is locked, please contact admin/super-admin.",
-      });
-    }
+
     const token = jwt.sign(
       {
         id: getUser._id,
@@ -93,6 +91,35 @@ const loginUser = async (req, res) => {
     );
     if (getUser) {
       if (await bcrypt.compare(password, getUser.password)) {
+        if (!getUser.verified) {
+          const randomNum = Math.floor(100000 + Math.random() * 900000);
+          try {
+            const emailRes = await sendEmail(email, randomNum);
+            if (emailRes.status) {
+              try {
+                await User.updateOne({ email }, { verification: randomNum });
+              } catch (err) {}
+              return res.status(200).json({
+                status: false,
+                verify: true,
+                error:
+                  "Your account is not verified, please check your email for verification code",
+              });
+            }
+          } catch (err) {
+            return res
+              .status(500)
+              .json({ status: false, error: "Internal server error" });
+          }
+        }
+
+        if (getUser.blocked) {
+          return res.status(500).json({
+            status: false,
+            error: "Your account is locked, please contact admin/super-admin.",
+          });
+        }
+
         if (
           userRole &&
           userRole == "admin" &&
@@ -123,6 +150,36 @@ const loginUser = async (req, res) => {
     }
   } catch (err) {
     return res.json({ status: false, error: "Wrong password or email" });
+  }
+};
+
+const verifyUser = async (req, res) => {
+  try {
+    const user = await User.findOne({ email: req.body.email });
+    if (user.verification === req.body.code) {
+      const updated = await User.updateOne(
+        { email: req.body.email },
+        { verified: true, verification: null }
+      );
+      if (updated.acknowledged) {
+        return res.status(200).json({
+          status: true,
+          verified: "Your account is verified, please login now",
+        });
+      } else {
+        return res
+          .status(500)
+          .json({ status: false, error: "Internal server error" });
+      }
+    } else {
+      return res
+        .status(500)
+        .json({ status: false, error: "Verification code is not correct" });
+    }
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ status: false, error: "Internal server error" });
   }
 };
 
@@ -373,6 +430,63 @@ const userListSelect2 = async (req, res) => {
   } catch (err) {}
 };
 
+const sendEmailVerification = async (req, res) => {
+  const randomNum = Math.floor(100000 + Math.random() * 900000);
+  try {
+    const verification = await sendEmail(req.body.email, randomNum);
+    if (verification.status) {
+      const updated = await User.updateOne(
+        { email: req.body.email },
+        { verification: randomNum }
+      );
+
+      if (updated.acknowledged) {
+        return res.status(200).json({
+          status: true,
+          message: "Verification code has been sent to your email address",
+        });
+      }
+    } else {
+      return res.status(500).json({
+        status: false,
+        error: "Internal server error",
+      });
+    }
+  } catch (err) {
+    return res.status(500).json({
+      status: false,
+      error: "Internal server error",
+    });
+  }
+};
+
+const resetPassword = async (req, res) => {
+  try {
+    const user = await User.findOne({ email: req.body.email });
+    if (req.body.code === user.verification) {
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(req.body.password, salt);
+      const updated = await User.updateOne(
+        { email: req.body.email },
+        { password: hashedPassword }
+      );
+      if (updated.acknowledged) {
+        return res
+          .status(200)
+          .json({ status: true, message: "Password has been updated" });
+      }
+    } else {
+      return res
+        .status(500)
+        .json({ status: false, error: "Verification code is not correct" });
+    }
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ status: false, error: "Internal server error" });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -385,4 +499,7 @@ module.exports = {
   getUsersByPage,
   deleteUser,
   userListSelect2,
+  verifyUser,
+  sendEmailVerification,
+  resetPassword,
 };

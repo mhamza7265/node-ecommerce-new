@@ -72,6 +72,9 @@ const {
   getUsersByPage,
   deleteUser,
   userListSelect2,
+  verifyUser,
+  sendEmailVerification,
+  resetPassword,
 } = require("../controllers/userController");
 
 const {
@@ -160,6 +163,9 @@ app.get("/products/listing", getProductsByPage);
 
 app.post("/register", userValidation, handleUserValidationErrors, registerUser);
 app.post("/login", loginUser);
+app.post("/verify", verifyUser);
+app.post("/sendEmail", sendEmailVerification);
+app.put("/resetPw", resetPassword);
 
 app.post("/user/password", updatePassword);
 
