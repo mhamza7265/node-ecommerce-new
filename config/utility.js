@@ -2,6 +2,7 @@ const configureCart = (prodId, product, requestedQuantity) => {
   const cartItem = {
     sku: product.sku,
     productId: product._id,
+    createdBy: product.createdBy,
     name: product.name,
     description: product.description,
     price: product.price,
@@ -61,6 +62,7 @@ const checkoutConfig = (data) => {
     paymentType: data.paymentType,
     cartId: data.cartId,
     userId: data.userId,
+    userEmail: data.userEmail,
     cartItems: data.cartItems,
     subTotal: data.subTotal,
     discount: data.discount,
@@ -72,6 +74,7 @@ const checkoutConfig = (data) => {
       country: data.country,
     },
   };
+  console.log("check", checkout);
   return checkout;
 };
 

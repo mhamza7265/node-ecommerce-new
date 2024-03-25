@@ -38,6 +38,10 @@ const checkoutSchema = new mongoose.Schema({
     type: String,
     required: false,
   },
+  userEmail: {
+    type: String,
+    required: true,
+  },
   cartItems: {
     type: Array,
     prodId: {

@@ -1,4 +1,5 @@
 const Category = require("../models/categoryModel");
+const fs = require("fs");
 
 const addCategory = async (req, res) => {
   const name = req.body.name;
@@ -37,17 +38,29 @@ const updateCategory = async (req, res) => {
   const { name, description } = req.body;
   const bodyData = {};
   if (name) {
-    Object.assign(bodyData, { name });
+    bodyData["name"] = name;
   }
   if (description) {
-    Object.assign(bodyData, { description });
+    bodyData["descrition"] = description;
   }
-  Object.assign(bodyData, image);
+  if (req.files.length > 0) {
+    bodyData["image"] = image;
+  }
   try {
+    if (req.files.length > 0) {
+      const product = await Category.findOne({ _id: id });
+      fs.unlink("files/" + product.image, (err) => {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log("file is deleted");
+        }
+      });
+    }
     const updated = await Category.updateOne({ _id: id }, bodyData);
     return res.json({ status: true, updated });
   } catch (err) {
-    return res.json({ status: false, Error: err });
+    return res.json({ status: false, error: "Internal server error" });
   }
 };
 
@@ -64,6 +77,14 @@ const getSingleCategory = async (req, res) => {
 const deleteCategory = async (req, res) => {
   const id = req.params.id;
   try {
+    const product = await Category.findOne({ _id: id });
+    fs.unlink("files/" + product.image, (err) => {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log("file is deleted");
+      }
+    });
     const deleted = await Category.deleteOne({ _id: id });
     return res.json({ status: true, data: deleted });
   } catch (err) {

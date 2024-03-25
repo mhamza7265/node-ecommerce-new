@@ -3,6 +3,7 @@ const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const User = require("../models/userModel");
 const sendEmail = require("../config/sendEmail");
+const fs = require("fs");
 
 const registerUser = async (req, res) => {
   const {
@@ -14,6 +15,7 @@ const registerUser = async (req, res) => {
     password,
     passwordCreated,
   } = req.body;
+  const image = req.files[0].path.replaceAll("\\", "/").replace("files/", "");
 
   const verify = jwt.verify(
     req.headers.authorization.replace("Bearer ", ""),
@@ -43,12 +45,13 @@ const registerUser = async (req, res) => {
         lastName,
         password: hashedPassword,
         role,
+        image,
         passwordCreated:
           passwordCreated !== null && passwordCreated !== undefined
             ? passwordCreated
             : true,
         blocked: false,
-        verified: false,
+        verified: role == "basic" ? false : true,
         verification: null,
       });
       return res.json({
@@ -91,28 +94,6 @@ const loginUser = async (req, res) => {
     );
     if (getUser) {
       if (await bcrypt.compare(password, getUser.password)) {
-        if (!getUser.verified) {
-          const randomNum = Math.floor(100000 + Math.random() * 900000);
-          try {
-            const emailRes = await sendEmail(email, randomNum);
-            if (emailRes.status) {
-              try {
-                await User.updateOne({ email }, { verification: randomNum });
-              } catch (err) {}
-              return res.status(200).json({
-                status: false,
-                verify: true,
-                error:
-                  "Your account is not verified, please check your email for verification code",
-              });
-            }
-          } catch (err) {
-            return res
-              .status(500)
-              .json({ status: false, error: "Internal server error" });
-          }
-        }
-
         if (getUser.blocked) {
           return res.status(500).json({
             status: false,
@@ -131,6 +112,32 @@ const loginUser = async (req, res) => {
             token: `Bearer ${token}`,
           });
         } else if (!userRole || userRole == null) {
+          if (!getUser.verified) {
+            const randomNum = Math.floor(100000 + Math.random() * 900000);
+            try {
+              const emailRes = await sendEmail(
+                email,
+                randomNum,
+                "verifyUser",
+                getUser.firstName
+              );
+              if (emailRes.status) {
+                try {
+                  await User.updateOne({ email }, { verification: randomNum });
+                } catch (err) {}
+                return res.status(200).json({
+                  status: false,
+                  verify: true,
+                  error:
+                    "Your account is not verified, please check your email for verification code",
+                });
+              }
+            } catch (err) {
+              return res
+                .status(500)
+                .json({ status: false, error: "Internal server error" });
+            }
+          }
           return res.json({
             status: true,
             login: "Login Success",
@@ -187,6 +194,7 @@ const editUser = async (req, res) => {
   const currentPw = req.body.current_pw;
   const newPw = req.body.new_pw;
   const userId = req.headers.id;
+  const image = req?.files[0]?.path.replaceAll("\\", "/").replace("files/", "");
   if (newPw !== "" && newPw !== undefined && newPw !== null) {
     if (currentPw == null || currentPw == undefined || currentPw == "") {
       return res
@@ -199,9 +207,9 @@ const editUser = async (req, res) => {
       firstName: req.body.first_name,
       lastName: req.body.last_name,
     };
-    const user = await User.findOne({ _id: userId });
+    const userOld = await User.findOne({ _id: userId });
     if (currentPw !== null && currentPw !== undefined && currentPw !== "") {
-      const comparePw = await bcrypt.compare(currentPw, user.password);
+      const comparePw = await bcrypt.compare(currentPw, userOld.password);
       if (comparePw && newPw !== undefined) {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(newPw, salt);
@@ -214,8 +222,23 @@ const editUser = async (req, res) => {
       }
     }
 
+    if (req.files.length > 0) {
+      userObj["image"] = image;
+    }
+
     const updated = await User.updateOne({ _id: userId }, userObj);
+
     if (updated.acknowledged) {
+      if (req.files.length > 0) {
+        console.log("updated");
+        fs.unlink("files/" + userOld.image, (err) => {
+          if (err) {
+            console.log(err);
+          } else {
+            console.log("file deleted!");
+          }
+        });
+      }
       const user = await User.findOne({ _id: userId });
       return res.status(200).json({
         status: true,
@@ -269,6 +292,7 @@ const getCurrentUser = async (req, res) => {
         middle_name: user.middleName,
         last_name: user.lastName,
         email: user.email,
+        image: user.image,
         role: user.role,
       },
     });
@@ -433,7 +457,13 @@ const userListSelect2 = async (req, res) => {
 const sendEmailVerification = async (req, res) => {
   const randomNum = Math.floor(100000 + Math.random() * 900000);
   try {
-    const verification = await sendEmail(req.body.email, randomNum);
+    const user = await User.findOne({ email: req.body.email });
+    const verification = await sendEmail(
+      req.body.email,
+      randomNum,
+      "resetPassword",
+      user.firstName
+    );
     if (verification.status) {
       const updated = await User.updateOne(
         { email: req.body.email },
@@ -468,7 +498,7 @@ const resetPassword = async (req, res) => {
       const hashedPassword = await bcrypt.hash(req.body.password, salt);
       const updated = await User.updateOne(
         { email: req.body.email },
-        { password: hashedPassword }
+        { password: hashedPassword, verification: null }
       );
       if (updated.acknowledged) {
         return res

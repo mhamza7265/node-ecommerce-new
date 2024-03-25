@@ -1,7 +1,6 @@
 const nodemailer = require("nodemailer");
 
-function sendEmail(user, code) {
-  console.log("user", user);
+function sendEmail(user, data, type, userName) {
   return new Promise((resolve, reject) => {
     const transporter = nodemailer.createTransport({
       service: "Gmail",
@@ -17,8 +16,22 @@ function sendEmail(user, code) {
     const mailOptions = {
       from: "auth.nodeecommerce@gmail.com",
       to: user,
-      subject: "Authentication",
-      html: `<div style="background-color: gray, border: 1px solid #5f6d66, border-radius: 5px, padding: 5px"><p>Please use bellow pin for verification</p><h2 style='color: red; padding: 10px; background-color: #000; width: max-content'>${code}</h2></div>`,
+      subject:
+        type == "order"
+          ? "New Order"
+          : type == "statusChange"
+          ? "Order Status Change"
+          : type == "verifyUser"
+          ? "Account Verification"
+          : "Password Reset Request",
+      html:
+        type == "order"
+          ? order(data)
+          : type == "statusChange"
+          ? statusChanged(data, userName)
+          : type == "verifyUser"
+          ? verify(data, userName)
+          : resetPassword(data, userName),
     };
 
     transporter.sendMail(mailOptions, (error, info) => {
@@ -31,6 +44,26 @@ function sendEmail(user, code) {
       }
     });
   });
+}
+
+function verify(data, userName) {
+  const html = `<div style="background-color: gray, border: 1px solid #5f6d66, border-radius: 5px, padding: 5px"><h2>Hello ${userName},</h2><span>Please use bellow pin for verification.</span><h2 style='color: red; padding: 10px; background-color: #000; width: max-content'>${data}</h2><p>Enter the code to verify your account.</p><p style="text-decoration: underline; font-style: italic;">The React Ecommerce Team</p></div>`;
+  return html;
+}
+
+function resetPassword(data, userName) {
+  const html = `<div style="background-color: gray, border: 1px solid #5f6d66, border-radius: 5px, padding: 5px"><h2>Hello ${userName},</h2><span>Please use bellow one-time pin to reset your password.</span><h2 style='color: red; padding: 10px; background-color: #000; width: max-content'>${data}</h2><p>Enter the code to reset your password.</p><p style="text-decoration: underline; font-style: italic;">The React Ecommerce Team</p></div>`;
+  return html;
+}
+
+function order(data) {
+  const html = `<div style="background-color: gray, border: 1px solid #5f6d66, border-radius: 5px, padding: 5px"><h2>Hello <span style="fornt-weight: bold; font-style: italic">Admin</span>,</h2><p>An Order has been placed by ${data}</p><p>Go to <a href="http://localhost:5173/admin" style="font-weight: bold">dashboard</a> to view the order.</p><p style="text-decoration: underline; font-style: italic;">React Ecommerce</p></div>`;
+  return html;
+}
+
+function statusChanged(data, userName) {
+  const html = `<div style="background-color: gray, border: 1px solid #5f6d66, border-radius: 5px, padding: 5px"><h2>Hello ${userName},</h2><p>Your order is ${data}</p><p style="text-decoration: underline; font-style: italic;">The React Ecommerce Team</p></div>`;
+  return html;
 }
 
 module.exports = sendEmail;

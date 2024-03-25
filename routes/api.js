@@ -123,6 +123,7 @@ const {
   initiateFBLogin,
   handleFBLogin,
 } = require("../controllers/facebookAuthController");
+const loginValidation = require("../validations/loginValidation");
 
 /**********************************************************************************************************/
 
@@ -161,8 +162,19 @@ app.post("/products", productQuantityMultiple);
 app.get("/products/bestsell", getBestSellingProducts);
 app.get("/products/listing", getProductsByPage);
 
-app.post("/register", userValidation, handleUserValidationErrors, registerUser);
-app.post("/login", loginUser);
+app.post(
+  "/register",
+  upload.any(),
+  userValidation,
+  handleUserValidationErrors,
+  registerUser
+);
+app.post(
+  "/login",
+  loginValidation.loginValidation,
+  loginValidation.handleLoginValidationErrors,
+  loginUser
+);
 app.post("/verify", verifyUser);
 app.post("/sendEmail", sendEmailVerification);
 app.put("/resetPw", resetPassword);
@@ -172,7 +184,7 @@ app.post("/user/password", updatePassword);
 app.use(upload.any(), authMiddleware); //auth middleware
 app.get("/users", getAllUsers);
 app.get("/user", getCurrentUser);
-app.put("/user", editUser);
+app.put("/user", upload.any(), editUser);
 
 app.post("/cart", cartValidation, handleCartValidationErrors, createCart);
 app.get("/cart", getAllProductsFromCart);

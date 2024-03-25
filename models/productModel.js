@@ -56,6 +56,14 @@ const productSchema = new mongoose.Schema({
     type: Array,
     required: true,
   },
+  createdBy: {
+    type: String,
+    required: true,
+  },
+  modifiedBy: {
+    type: String,
+    required: false,
+  },
 });
 
 productSchema.plugin(mongoosePaginate);

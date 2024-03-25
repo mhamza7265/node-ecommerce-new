@@ -2,9 +2,11 @@ const Category = require("../models/categoryModel");
 const Product = require("../models/productModel");
 const Checkout = require("../models/checkoutModel");
 const mongoose = require("mongoose");
+const fs = require("fs");
 var _ = require("lodash");
 
 const addProduct = async (req, res) => {
+  const email = req.headers.email;
   const category = req.body.category;
   const sku = req.body.sku;
   const name = req.body.name;
@@ -31,6 +33,7 @@ const addProduct = async (req, res) => {
         discount,
       },
       images: imagesPaths,
+      createdBy: email,
     });
     return res.json({ status: true, data: added });
   } catch (err) {
@@ -58,7 +61,6 @@ const getSingleProduct = async (req, res) => {
 };
 
 const updateProduct = async (req, res) => {
-  console.log("body", req.body);
   const id = req.params.id;
   const images = {
     images: req.files?.map((item) => {
@@ -103,8 +105,21 @@ const updateProduct = async (req, res) => {
     Object.assign(bodyData, imagePath);
   }
 
-  console.log("bodyData", bodyData);
+  bodyData["modifiedBy"] = req.headers.email;
+
   try {
+    if (req.files.length > 0) {
+      const product = await Product.findOne({ _id: id });
+      product.images.forEach((item) => {
+        fs.unlink("files/" + item, (err) => {
+          if (err) {
+            console.log(err);
+          } else {
+            console.log("file is deleted");
+          }
+        });
+      });
+    }
     const edited = await Product.updateOne({ _id: id }, bodyData);
     return res.json({ status: true, edited });
   } catch (err) {
@@ -187,6 +202,16 @@ const getProductsByPage = async (req, res) => {
 const deleteSingleProduct = async (req, res) => {
   const id = req.params.id;
   try {
+    const productDetail = await Product.findOne({ _id: id });
+    productDetail.images.forEach((item) => {
+      fs.unlink("files/" + item, (err) => {
+        if (err) {
+          console.log(err);
+        } else {
+          console.log("file is deleted");
+        }
+      });
+    });
     const product = await Product.deleteOne({ _id: id });
     return res.json({ status: true, product });
   } catch (err) {

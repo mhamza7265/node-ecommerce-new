@@ -4,15 +4,26 @@ const Address = require("../models/addressModel");
 const Product = require("../models/productModel");
 const User = require("../models/userModel");
 const { checkoutConfig } = require("../config/utility");
+const sendEmail = require("../config/sendEmail");
 const stripe = require("stripe")(
   "sk_test_51OgnngCZAiYypOnUqPVjqJabWfyBwjL5aA75jBrk0eJ13S9LQ6yL96Qbm4WEEEqb0XAEcHvBM6jhVO0s0lgoB4IF007yzT5pd4"
 );
 
 const createCheckout = async (req, res) => {
   const userId = req.headers.id;
+  let admins = [];
+
+  Object.values(req.body.cartItems).forEach((item) => {
+    const items = Object.values(item);
+    items.forEach((item) => {
+      const prodId = item.createdBy;
+      admins.push(prodId);
+    });
+  });
 
   const data = {
     userId,
+    userEmail: req.headers.email,
     address: req.body.address,
     city: req.body.city,
     state: req.body.state,
@@ -48,6 +59,7 @@ const createCheckout = async (req, res) => {
     }
     const orderComplete = await Checkout.create(response);
     await Cart.updateOne({ _id: req.body.cartId }, { status: 2 });
+    await sendEmail(admins, req.headers.email, "order");
     return res.status(200).json({
       status: true,
       orderComplete,
@@ -214,6 +226,14 @@ const processOrder = async (req, res) => {
   const orderId = req.body.orderId;
   const orderStatus = req.body.orderStatus;
   try {
+    const orderDetails = await Checkout.findOne({ _id: orderId });
+    const user = await User.findOne({ email: orderDetails.userEmail });
+    await sendEmail(
+      orderDetails.userEmail,
+      orderStatus,
+      "statusChange",
+      user.firstName
+    );
     const updated = await Checkout.updateOne(
       { _id: orderId },
       { status: orderStatus }
