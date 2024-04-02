@@ -4,7 +4,6 @@ const connectToDB = require("./config/connectToDB");
 const routes = require("./routes/api");
 connectToDB();
 /*************************************************************************************************************/
-
 const app = express();
 app.use(express.json());
 app.use(cors());

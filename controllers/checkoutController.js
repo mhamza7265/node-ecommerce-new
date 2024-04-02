@@ -5,6 +5,7 @@ const Product = require("../models/productModel");
 const User = require("../models/userModel");
 const { checkoutConfig } = require("../config/utility");
 const sendEmail = require("../config/sendEmail");
+const sendNotifications = require("../config/sendNotifications");
 const stripe = require("stripe")(
   "sk_test_51OgnngCZAiYypOnUqPVjqJabWfyBwjL5aA75jBrk0eJ13S9LQ6yL96Qbm4WEEEqb0XAEcHvBM6jhVO0s0lgoB4IF007yzT5pd4"
 );
@@ -20,6 +21,8 @@ const createCheckout = async (req, res) => {
       admins.push(prodId);
     });
   });
+
+  console.log("admins", admins);
 
   const data = {
     userId,
@@ -37,6 +40,30 @@ const createCheckout = async (req, res) => {
   };
   const response = checkoutConfig(data);
   try {
+    const adminsDoc = await User.aggregate([
+      { $match: { email: { $in: admins } } },
+      {
+        $project: {
+          _id: 0,
+          token: "$deviceToken",
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          deviceToken: { $push: "$token" },
+        },
+      },
+      {
+        $project: {
+          _id: 0,
+          deviceToken: 1,
+        },
+      },
+    ]);
+    console.log("adminsDoc", adminsDoc);
+    console.log("arr", adminsDoc[0].deviceToken);
+
     const userAddress = await Address.findOne({ userId });
     if (userAddress) {
       await Address.updateOne(
@@ -60,9 +87,17 @@ const createCheckout = async (req, res) => {
     const orderComplete = await Checkout.create(response);
     await Cart.updateOne({ _id: req.body.cartId }, { status: 2 });
     await sendEmail(admins, req.headers.email, "order");
+    sendNotifications(
+      adminsDoc[0].deviceToken,
+      {
+        title: "New Order",
+        body: "You have a new order",
+      },
+      true
+    );
     return res.status(200).json({
       status: true,
-      orderComplete,
+      // orderComplete,
       message: "Order placed successfully!",
     });
   } catch (err) {
@@ -234,6 +269,14 @@ const processOrder = async (req, res) => {
       "statusChange",
       user.firstName
     );
+    sendNotifications(user.deviceToken, {
+      title: "Order Status updated!",
+      body: `Dear ${user.firstName} your order is ${
+        orderStatus == "Processing"
+          ? "under" + " " + orderStatus + "!"
+          : orderStatus + "!"
+      }`,
+    });
     const updated = await Checkout.updateOne(
       { _id: orderId },
       { status: orderStatus }

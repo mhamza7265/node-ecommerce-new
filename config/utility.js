@@ -74,7 +74,6 @@ const checkoutConfig = (data) => {
       country: data.country,
     },
   };
-  console.log("check", checkout);
   return checkout;
 };
 

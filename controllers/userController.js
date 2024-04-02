@@ -111,7 +111,7 @@ const loginUser = async (req, res) => {
             login: "Login Success",
             token: `Bearer ${token}`,
           });
-        } else if (!userRole || userRole == null) {
+        } else if (!userRole || userRole == null || userRole == "basic") {
           if (!getUser.verified) {
             const randomNum = Math.floor(100000 + Math.random() * 900000);
             try {
@@ -517,6 +517,24 @@ const resetPassword = async (req, res) => {
   }
 };
 
+const registerUserDevice = async (req, res) => {
+  try {
+    const updated = await User.updateOne(
+      { email: req.headers.email },
+      { deviceToken: req.body.deviceToken }
+    );
+    if (updated.acknowledged) {
+      return res
+        .status(200)
+        .json({ status: true, message: "device token saved" });
+    }
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ status: false, error: "Internal server error" });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -532,4 +550,5 @@ module.exports = {
   verifyUser,
   sendEmailVerification,
   resetPassword,
+  registerUserDevice,
 };

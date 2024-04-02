@@ -57,6 +57,10 @@ const userSchema = new mongoose.Schema({
     type: Number,
     required: false,
   },
+  deviceToken: {
+    type: String,
+    required: false,
+  },
 });
 
 userSchema.plugin(mongoosePaginate);

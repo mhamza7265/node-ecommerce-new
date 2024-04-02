@@ -75,6 +75,7 @@ const {
   verifyUser,
   sendEmailVerification,
   resetPassword,
+  registerUserDevice,
 } = require("../controllers/userController");
 
 const {
@@ -185,6 +186,8 @@ app.use(upload.any(), authMiddleware); //auth middleware
 app.get("/users", getAllUsers);
 app.get("/user", getCurrentUser);
 app.put("/user", upload.any(), editUser);
+
+app.post("/registerDevice", registerUserDevice);
 
 app.post("/cart", cartValidation, handleCartValidationErrors, createCart);
 app.get("/cart", getAllProductsFromCart);
