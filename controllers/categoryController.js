@@ -32,9 +32,7 @@ const getAllCategories = async (req, res) => {
 
 const updateCategory = async (req, res) => {
   const id = req.params.id;
-  const image = {
-    image: req.files[0]?.path.replaceAll("\\", "/").replace("files/", ""),
-  };
+  const image = req.files[0]?.path.replaceAll("\\", "/").replace("files/", "");
   const { name, description } = req.body;
   const bodyData = {};
   if (name) {
@@ -47,8 +45,9 @@ const updateCategory = async (req, res) => {
     bodyData["image"] = image;
   }
   try {
-    if (req.files.length > 0) {
-      const product = await Category.findOne({ _id: id });
+    const product = await Category.findOne({ _id: id });
+    const updated = await Category.updateOne({ _id: id }, bodyData);
+    if (updated.acknowledged && req.files.length > 0) {
       fs.unlink("files/" + product.image, (err) => {
         if (err) {
           console.log(err);
@@ -57,7 +56,6 @@ const updateCategory = async (req, res) => {
         }
       });
     }
-    const updated = await Category.updateOne({ _id: id }, bodyData);
     return res.json({ status: true, updated });
   } catch (err) {
     return res.json({ status: false, error: "Internal server error" });

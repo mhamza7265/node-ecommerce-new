@@ -1,5 +1,5 @@
-const multer = require("multer");
 const express = require("express");
+const upload = require("../middlewares/fileStorage");
 
 const authMiddleware = require("../middlewares/auth");
 const checkRoleMiddleware = require("../middlewares/checkRole");
@@ -73,6 +73,7 @@ const {
   deleteUser,
   userListSelect2,
   verifyUser,
+  changeRole,
   sendEmailVerification,
   resetPassword,
   registerUserDevice,
@@ -126,17 +127,15 @@ const {
 } = require("../controllers/facebookAuthController");
 const loginValidation = require("../validations/loginValidation");
 
+const {
+  saveNotification,
+  getNotifications,
+} = require("../controllers/notificationController");
+
 /**********************************************************************************************************/
 
 const app = express();
-const storageEngine = multer.diskStorage({
-  destination: "./files/images",
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}--${file.originalname}`);
-  },
-});
 
-const upload = multer({ storage: storageEngine });
 //routes
 app.get("/", async (req, res) => {
   return res.json("Hello World!");
@@ -149,6 +148,9 @@ app.get("/auth/facebook", initiateFBLogin);
 app.get("/auth/facebook/callback", handleFBLogin);
 
 app.get("/user/role", userRole);
+
+app.post("/saveNotification", saveNotification);
+app.get("/notifications", getNotifications);
 
 app.get("/category", getAllCategories);
 app.get("/category/:id", getSingleCategory);
@@ -186,6 +188,7 @@ app.use(upload.any(), authMiddleware); //auth middleware
 app.get("/users", getAllUsers);
 app.get("/user", getCurrentUser);
 app.put("/user", upload.any(), editUser);
+app.post("/changeRole", changeRole);
 
 app.post("/registerDevice", registerUserDevice);
 

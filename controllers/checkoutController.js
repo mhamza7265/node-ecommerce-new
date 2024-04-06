@@ -22,8 +22,6 @@ const createCheckout = async (req, res) => {
     });
   });
 
-  console.log("admins", admins);
-
   const data = {
     userId,
     userEmail: req.headers.email,
@@ -94,7 +92,14 @@ const createCheckout = async (req, res) => {
         body: "You have a new order",
       },
       true
-    );
+    )
+      .then((res) => {
+        console.log("Notification", res);
+      })
+      .catch((err) => {
+        console.log("Notification Error", err);
+      });
+
     return res.status(200).json({
       status: true,
       // orderComplete,
@@ -217,7 +222,7 @@ const getAllOrdersByPage = async (req, res) => {
   const search = req.query.search;
   const orderId = req.query.orderId;
   let page = 1;
-  const limit = 5;
+  const limit = 10;
   if (currentPage) page = currentPage;
   try {
     if (role == "admin" || role == "superAdmin") {
@@ -247,7 +252,7 @@ const getCustomerOrdersByPage = async (req, res) => {
   const userId = req.params.id;
   const currentPage = req.query.page;
   let page = 1;
-  const limit = 5;
+  const limit = 10;
   if (currentPage) page = currentPage;
   try {
     const orders = await Checkout.paginate({ userId }, { page, limit });
@@ -263,25 +268,37 @@ const processOrder = async (req, res) => {
   try {
     const orderDetails = await Checkout.findOne({ _id: orderId });
     const user = await User.findOne({ email: orderDetails.userEmail });
-    await sendEmail(
-      orderDetails.userEmail,
-      orderStatus,
-      "statusChange",
-      user.firstName
-    );
-    sendNotifications(user.deviceToken, {
-      title: "Order Status updated!",
-      body: `Dear ${user.firstName} your order is ${
-        orderStatus == "Processing"
-          ? "under" + " " + orderStatus + "!"
-          : orderStatus + "!"
-      }`,
-    });
+
     const updated = await Checkout.updateOne(
       { _id: orderId },
       { status: orderStatus }
     );
+    console.log("updated", updated);
     if (updated.acknowledged) {
+      sendEmail(
+        orderDetails.userEmail,
+        orderStatus,
+        "statusChange",
+        user.firstName
+      );
+      sendNotifications(
+        user.deviceToken,
+        {
+          title: "Order Status updated!",
+          body: `Dear ${user.firstName} your order ${orderDetails.orderId} is ${
+            orderStatus == "Processing"
+              ? "under" + " " + orderStatus + "!"
+              : orderStatus + "!"
+          }`,
+        },
+        false
+      )
+        .then((res) => {
+          console.log("Notification", res);
+        })
+        .catch((err) => {
+          console.log("Notification error", err);
+        });
       const updatedOrder = await Checkout.findOne({ _id: orderId });
 
       return res

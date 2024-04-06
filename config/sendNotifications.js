@@ -11,6 +11,7 @@ const sendNotifications = (registrationToken, message, array) => {
   return new Promise((resolve, reject) => {
     // This registration token comes from the client FCM SDKs.
     const d = new Date();
+    console.log("token", registrationToken);
 
     const tokenKey = array ? "tokens" : "token";
 
@@ -18,8 +19,6 @@ const sendNotifications = (registrationToken, message, array) => {
       data: {
         score: "850", //"850",
         time: d.getHours() + ":" + d.getMinutes(), //"2:45",
-      },
-      notification: {
         title: message.title,
         body: message.body,
       },

@@ -355,6 +355,25 @@ const userRole = async (req, res) => {
   }
 };
 
+const changeRole = async (req, res) => {
+  console.log("req", req.body);
+  try {
+    const updated = await User.updateOne(
+      { _id: req.body.id },
+      { role: req.body.role }
+    );
+    if (updated.acknowledged) {
+      return res
+        .status(200)
+        .json({ status: true, updated: "User role updated!" });
+    }
+  } catch (err) {
+    return res
+      .status(500)
+      .json({ status: false, error: "Internal server error" });
+  }
+};
+
 const blockUnblockUser = async (req, res) => {
   if (req.body.type == "admin" && req.headers.role !== "superAdmin") {
     return res.status(401).json({
@@ -548,6 +567,7 @@ module.exports = {
   deleteUser,
   userListSelect2,
   verifyUser,
+  changeRole,
   sendEmailVerification,
   resetPassword,
   registerUserDevice,
