@@ -132,6 +132,21 @@ const {
   getNotifications,
 } = require("../controllers/notificationController");
 
+const {
+  addSlider,
+  getSliders,
+  editSlider,
+  deleteSlider,
+  addBanner,
+  getBanners,
+  editBanner,
+  deleteBanner,
+  addBestselling,
+  getBestselling,
+  editBestsellng,
+  deleteBestselling,
+} = require("../controllers/CMS/cmsController");
+
 /**********************************************************************************************************/
 
 const app = express();
@@ -146,6 +161,11 @@ app.get("/auth/google/callback", handleGoogleLogin);
 
 app.get("/auth/facebook", initiateFBLogin);
 app.get("/auth/facebook/callback", handleFBLogin);
+
+//CMS
+app.get("/bestselling", getBestselling);
+app.get("/banners", getBanners);
+app.get("/sliders", getSliders);
 
 app.get("/user/role", userRole);
 
@@ -189,6 +209,20 @@ app.get("/users", getAllUsers);
 app.get("/user", getCurrentUser);
 app.put("/user", upload.any(), editUser);
 app.post("/changeRole", changeRole);
+
+//CMS
+app.post("/addSlider", upload.any(), addSlider);
+app.put("/slider", upload.any(), editSlider);
+app.delete("/slider", deleteSlider);
+
+app.post("/addBanner", upload.any(), addBanner);
+app.put("/banner", editBanner);
+app.delete("/banner", deleteBanner);
+
+app.post("/addBestselling", upload.any(), addBestselling);
+app.put("/bestselling", upload.any(), editBestsellng);
+app.delete("/bestselling", deleteBestselling);
+//CMS
 
 app.post("/registerDevice", registerUserDevice);
 
