@@ -23,7 +23,18 @@ const addSlider = async (req, res) => {
 
 const getSliders = async (req, res) => {
   try {
-    const sliders = await Slider.find();
+    const sliders = await Slider.aggregate([
+      {
+        $project: {
+          text1Sub: { $substr: ["$text1", 0, 21] },
+          text2Sub: { $substr: ["$text2", 0, 21] },
+          text1: 1,
+          text2: 1,
+          image: 1,
+          textAlign: 1,
+        },
+      },
+    ]);
     return res.status(200).json({ status: true, sliders });
   } catch (err) {
     return res
@@ -82,14 +93,13 @@ const deleteSlider = async (req, res) => {
 //Banner
 const addBanner = async (req, res) => {
   const image = req.files[0]?.path.replaceAll("\\", "/").replace("files/", "");
-  const slider = {
+  const banner = {
     text1: req.body.text1,
-    text2: req.body.text2,
     textAlign: req.body.textAlign,
     image: image,
   };
   try {
-    const cms = await Banner.create(slider);
+    const cms = await Banner.create(banner);
     return res.status(200).json({ status: true, cms });
   } catch (err) {
     return res
@@ -100,7 +110,16 @@ const addBanner = async (req, res) => {
 
 const getBanners = async (req, res) => {
   try {
-    const banners = await Banner.find();
+    const banners = await Banner.aggregate([
+      {
+        $project: {
+          text1Sub: { $substr: ["$text1", 0, 21] },
+          text1: 1,
+          image: 1,
+          textAlign: 1,
+        },
+      },
+    ]);
     return res.status(200).json({ status: true, banners });
   } catch (err) {
     return res
@@ -159,14 +178,13 @@ const deleteBanner = async (req, res) => {
 //Best Selling
 const addBestselling = async (req, res) => {
   const image = req.files[0]?.path.replaceAll("\\", "/").replace("files/", "");
-  const Slider = {
+  const bestselling = {
     text1: req.body.text1,
-    text2: req.body.text2,
     textAlign: req.body.textAlign,
     image: image,
   };
   try {
-    const cms = await Bestselling.create(Slider);
+    const cms = await Bestselling.create(bestselling);
     return res.status(200).json({ status: true, cms });
   } catch (err) {
     return res
@@ -177,7 +195,16 @@ const addBestselling = async (req, res) => {
 
 const getBestselling = async (req, res) => {
   try {
-    const bestselling = await Bestselling.find();
+    const bestselling = await Bestselling.aggregate([
+      {
+        $project: {
+          text1Sub: { $substr: ["$text1", 0, 21] },
+          text1: 1,
+          image: 1,
+          textAlign: 1,
+        },
+      },
+    ]);
     return res.status(200).json({ status: true, bestselling });
   } catch (err) {
     return res

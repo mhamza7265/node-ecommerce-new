@@ -5,10 +5,6 @@ const bannerSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  text2: {
-    type: String,
-    required: true,
-  },
   textAlign: {
     type: String,
     required: true,
