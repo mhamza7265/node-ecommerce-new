@@ -133,19 +133,17 @@ const {
 } = require("../controllers/notificationController");
 
 const {
-  addSlider,
-  getSliders,
-  editSlider,
-  deleteSlider,
-  addBanner,
-  getBanners,
-  editBanner,
-  deleteBanner,
-  addBestselling,
-  getBestselling,
-  editBestsellng,
-  deleteBestselling,
+  addHomePage,
+  getHomePage,
+  editHomePage,
+  deleteHomePage,
+  createEditSettings,
+  getSettings,
 } = require("../controllers/CMS/cmsController");
+const {
+  addEditSectionOne,
+  getSectionOne,
+} = require("../controllers/CMS/AboutController");
 
 /**********************************************************************************************************/
 
@@ -163,9 +161,10 @@ app.get("/auth/facebook", initiateFBLogin);
 app.get("/auth/facebook/callback", handleFBLogin);
 
 //CMS
-app.get("/bestselling", getBestselling);
-app.get("/banners", getBanners);
-app.get("/sliders", getSliders);
+app.get("/getHomePage/:type", getHomePage);
+app.get("/settings", getSettings);
+app.get("/getSetionOne", getSectionOne);
+//CMS
 
 app.get("/user/role", userRole);
 
@@ -211,17 +210,11 @@ app.put("/user", upload.any(), editUser);
 app.post("/changeRole", changeRole);
 
 //CMS
-app.post("/addSlider", upload.any(), addSlider);
-app.put("/slider", upload.any(), editSlider);
-app.delete("/slider", deleteSlider);
-
-app.post("/addBanner", upload.any(), addBanner);
-app.put("/banner", editBanner);
-app.delete("/banner", deleteBanner);
-
-app.post("/addBestselling", upload.any(), addBestselling);
-app.put("/bestselling", upload.any(), editBestsellng);
-app.delete("/bestselling", deleteBestselling);
+app.post("/addHomePage/:type", upload.any(), addHomePage);
+app.put("/editHomePage/:type", upload.any(), editHomePage);
+app.delete("/deleteHomePage/:type", deleteHomePage);
+app.post("/settings", upload.any(), createEditSettings);
+app.post("/sectionOne", upload.any(), addEditSectionOne);
 //CMS
 
 app.post("/registerDevice", registerUserDevice);
