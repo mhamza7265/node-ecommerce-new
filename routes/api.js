@@ -142,8 +142,18 @@ const {
 } = require("../controllers/CMS/cmsController");
 const {
   addEditSectionOne,
-  getSectionOne,
+  getSection,
+  deleteSection,
+  editSection,
+  addSectionTwo,
+  addEditSectionThree,
 } = require("../controllers/CMS/AboutController");
+const {
+  addSectionOne,
+  getSectionData,
+  deleteSectionData,
+  editSectionData,
+} = require("../controllers/CMS/contactController");
 
 /**********************************************************************************************************/
 
@@ -163,7 +173,8 @@ app.get("/auth/facebook/callback", handleFBLogin);
 //CMS
 app.get("/getHomePage/:type", getHomePage);
 app.get("/settings", getSettings);
-app.get("/getSetionOne", getSectionOne);
+app.get("/getSection/:section", getSection);
+app.get("/getContactSection/:section", getSectionData);
 //CMS
 
 app.get("/user/role", userRole);
@@ -215,6 +226,13 @@ app.put("/editHomePage/:type", upload.any(), editHomePage);
 app.delete("/deleteHomePage/:type", deleteHomePage);
 app.post("/settings", upload.any(), createEditSettings);
 app.post("/sectionOne", upload.any(), addEditSectionOne);
+app.post("/section/:section", upload.any(), addSectionTwo);
+app.delete("/deleteSection/:section", deleteSection);
+app.post("/sectionThree", upload.any(), addEditSectionThree);
+app.put("/section/:section", upload.any(), editSection);
+app.post("/contactSectionOne/:section", addSectionOne);
+app.delete("/contactSection/:section", deleteSectionData);
+app.put("/contactSection/:section", editSectionData);
 //CMS
 
 app.post("/registerDevice", registerUserDevice);
